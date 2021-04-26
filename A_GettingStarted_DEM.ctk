@@ -1,0 +1,237 @@
+<Task schemaVersion="7.2">
+
+    <Registration>
+        <Name>Create New Variables</Name>
+        <Description>The Transpose Data task transposes selected columns of an input table into the rows of an output table.</Description>
+        <GUID>A7167160-A6AF-4E48-8AB4-B7AB1030D412</GUID>
+        <Procedures>TRANSPOSE</Procedures>
+        <Version>5.2</Version>
+        <Links>
+            <Link href="http://documentation.sas.com/?softwareId=STUDIOBASIC&amp;softwareVersion=5.2&amp;softwareContextId=tasks&amp;requestor=inapp">SAS Studio Task Reference Guide</Link>
+            <Link href=""> </Link>
+            <Link href=""> </Link>
+			 <Link href="http://documentation.sas.com/?softwareId=MVADOC&amp;softwareVersion=5.2_9.4&amp;softwareContextId=proc_transpose&amp;requestor=inapp">The TRANSPOSE Procedure</Link>
+            <Link href=""> </Link>
+            <Link href=""> </Link>
+            <Link href="http://support.sas.com/training/studio">SAS Tutorials</Link>
+        </Links>
+    </Registration>
+
+    <Metadata>
+        <DataSources>
+			 <DataSource name="startds" where="true">
+                <Roles>
+                    <Role maxVars="1" minVars="1" name="startdummyvar" order="true" type="C">Package to update:</Role>
+                </Roles>
+            </DataSource>
+            <DataSource name="dataset" defaultValue="WORK.SOURCE_VARIABLES" readOnly="true" where="false">
+                <Roles>
+                    <Role exclude="idVariable,idLabelVariable" maxVars="0" minVars="1" name="transposeVariables" order="true" type="A">Variables used in transformation:</Role>
+                    <Role indent="1" maxVars="0" minVars="0" name="copyVariables" order="true" type="A">Copy to output data set:</Role>
+                    <Role exclude="transposeVariables, byVariables, idLabelVariable" indent="1" maxVars="1" minVars="1" name="idVariable" order="true" type="A">New column names:</Role>
+                    <Role exclude="transposeVariables, byVariables, idVariable" indent="1" maxVars="1" minVars="1" name="idLabelVariable" order="true" type="A">New column labels:</Role>
+                    <Role exclude="idVariable, idLabelVariable" maxVars="0" minVars="0" name="byVariables" order="true" type="A">Group analysis by:</Role>
+                </Roles>
+            </DataSource>
+            <DataSource name="packageds" defaultValue="WORK.PACKAGES" readOnly="true" where="false">
+                <Roles>
+                    <Role maxVars="1" minVars="1" name="packageupdate" order="true" type="C">Package to update:</Role>
+  					<Role exclude="packageupdate" maxVars="0" minVars="0" name="packagestoleverage" order="true" type="C">Packages to leverage:</Role>
+                </Roles>
+            </DataSource>
+        </DataSources>
+
+        <Options>
+            <Option inputType="string" name="dataTab">Select DATA Source</Option>
+            <Option inputType="string" name="dataGroup">DATA</Option>
+            <Option inputType="string" name="rolesGroup">ROLES</Option>
+            <Option inputType="string" name="otherRolesGroup">ADDITIONAL ROLES</Option>
+
+            <Option inputType="string" name="optionsTab">Create New Variables</Option>
+
+            <Option defaultValue="0" indent="1" inputType="checkbox" name="allowDuplicates">Allow duplicates of ID values</Option>
+
+            <Option inputType="string" name="transposedVarNamesGroup">NAMES AND LABELS OF TRANSPOSED VARIABLES</Option>
+            <Option inputType="string" name="transposedVarNamesNote">Construct New Variable Names</Option>
+            <Option defaultValue="1" inputType="checkbox" name="usePrefix">Use prefix</Option>
+            <Option defaultValue="Column" indent="1" inputType="validationtext" invalidMessage="Enter a valid SAS variable name" missingMessage="Enter a valid SAS variable name" name="prefix" regExp=".{1,30}" required="true" width="200px">Prefix:</Option>
+            <Option defaultValue="0" inputType="checkbox" name="useIdVar">Select a variable that contains the names of the new variables</Option>
+            <Option inputType="string" name="transposedVarLabelsNote">Construct New Variable Labels</Option>
+            <Option defaultValue="0" inputType="checkbox" name="ActivateBuild">Enable variable build:Check only after running code !</Option>
+
+            <Option inputType="string" name="originalVarNamesGroup">NAMES AND LABELS OF ORIGINAL VARIABLES</Option>
+            <Option defaultValue="0" inputType="checkbox" name="useNameVarname">Put original variable names in a new variable</Option>
+            <Option defaultValue="0" inputType="checkbox" name="useLabelVarname">Put original variable labels in a new variable</Option>
+<!-- New SAS variable name: check against input data set -->
+            <Option defaultValue="_Name_" indent="1" inputType="validationtext" invalidMessage="Enter a valid SAS variable name to hold the original variable names" missingMessage="Enter a valid SAS variable name to hold the original variable names" name="nameVarname" regExp=".{1,32}" required="true" width="200px">Name:</Option>
+<!-- New SAS variable name: check against input data set -->
+            <Option defaultValue="_Label_" indent="1" inputType="validationtext" invalidMessage="Enter a valid SAS variable name to hold the original variable labels" missingMessage="Enter a valid SAS variable name to hold the original variable labels" name="labelVarname" regExp=".{1,32}" required="true" width="203px">Label:</Option>
+
+            <Option inputType="string" name="outputGroup">OUTPUT DATA SET</Option>
+
+            <Option defaultValue="work.Transpose" inputType="outputdata" name="outDsname" required="true" unique="true">Data set name:</Option>
+
+            <Option inputType="string" name="showDataGroup">Output Data</Option>
+            <Option defaultValue="0" inputType="checkbox" name="showData">Print output data</Option>
+            <Option defaultValue="showSubsetDataChoice" inputType="combobox" name="showDataCombo"/>
+            <Option inputType="string" name="showSubsetDataChoice">Specify subset of data to print</Option>
+            <Option inputType="string" name="showAllDataChoice">All</Option>
+            <Option decimalPlaces="0" defaultValue="10" increment="1" indent="1" inputType="numstepper" invalidMessage="Enter an integer greater than 0 for the number of observations to be shown" minValue="1" missingMessage="Enter an integer greater than 0 for the number of observations to be shown" name="subsetNobs" promptMessage="Enter an integer greater than 0 for the number of observations to be shown" rangeMessage="Enter an integer greater than 0 for the number of observations to be shown" required="true" width="100px">Number of observations:</Option>
+
+            <Option inputType="string" name="subsetTitle">Subset of {1}</Option>
+			<Option defaultValue="" inputType="inputtext" missingMessage="Missing an output variable." name="textOUTPUT" width="300px" promptMessage="Enter variable output name." required="true">Name of transformation output variable:</Option>
+			<Option defaultValue="Replace This Text" inputType="inputtext" missingMessage="Missing label for your output variable." name="textLABEL" width="600px" promptMessage="Enter label for your output name." required="true">Label for your newly created variable:</Option>
+			<Option name="textCode" required="true" inputType="textbox" width="100%" height="300px" splitlines="true" defaultValue="">Code Window</Option>
+	<!--		<Option defaultValue="1" inputType="radio" name="radioExternalVarNo" variable="radioIncludeVars">Include Variables from other models</Option>
+			<Option inputType="radio" name="radioExternalVarYes" variable="radioIncludeVars">Exclude Variables from other models</Option> -->
+			<Option defaultValue="0" inputType="checkbox" name="chkCreateDropDowns">Populate Drop Downs</Option>
+			<Option defaultValue="0" inputType="checkbox" name="chkIncludeVars">Include Variables from other models</Option>
+			<Option defaultValue="Put Variable Name here" inputType="validationtext" width="300px" invalidMessage="Invalid value.You must specify a string of 28 or less characters made up of alphanumeric and underscores" name="validationVarName" promptMessage="Enter a string 1-28 characters long." regExp="\S{1,28}">Variable Name:</Option>
+			<Option defaultValue="Put label here" inputType="validationtext" width="600px" invalidMessage="Invalid value.You must specify a string of 256 or less characters" name="validationLabel" promptMessage="Enter a string 1-256 characters long." regExp=".{1,256}">Variable Label (up to 256):</Option>
+        	<Option inputType="markdown" name="markdownStep1">
+**Step 1:** Select your source data table
+</Option>
+			<Option inputType="markdown" name="markdownStep2">
+**Step 2:** Select model (package) that you are working with to build new transformations
+</Option>
+			<Option inputType="markdown" name="markdownStep3">
+**Step 3:** Select models (packages) that hold variables you want to use in your transformations
+</Option>
+			<Option inputType="markdown" name="markdownStep4">
+**Step 4:** Click the run button to execute code
+</Option>
+			<Option inputType="markdown" name="markdownStep5">
+**Step 5:** Click the save button to save your selections for future use
+</Option>
+			<Option inputType="markdown" name="markdownForward">
+# **Going forward**
+To take up where you left off, simply open your saved CTK file and click the run button
+</Option>
+			</Options>
+    </Metadata>
+
+        <UI>
+            <Container option="dataTab">
+				<OptionItem option="markdownStep1"/>
+                <Group open="true" option="dataGroup">
+                    <DataItem data="startds"/>
+			<!--		<OptionItem option="chkIncludeVars"/> -->
+  					<DataItem data="packageds"/>
+<OptionItem option="markdownStep2"/>
+	<RoleItem role="packageupdate"/>
+				<OptionItem option="markdownStep3"/>
+					<RoleItem role="packagestoleverage"/>
+				<OptionItem option="markdownStep4"/>
+				<OptionItem option="markdownStep5"/>
+				<OptionItem option="markdownForward"/>
+				<!--	<OptionItem option="ActivateBuild"/> -->
+		<!--			<OptionItem option="chkCreateDropDowns"/>
+				<OptionItem option="radioExternalVarNo"/>
+				<OptionItem option="radioExternalVarYes"/> -->
+                </Group>
+               
+   <!--             <Group option="otherRolesGroup">
+                    <RoleItem role="byVariables"/>
+                </Group>
+                <Group open="true" option="outputGroup">
+                    <OptionItem option="outDsname"/>
+                    <RoleItem role="copyVariables"/>
+                    <Group open="true" option="showDataGroup">
+                        <OptionItem option="showData"/>
+                        <OptionChoice option="showDataCombo">
+                            <OptionItem option="showSubsetDataChoice"/>
+                            <OptionItem option="showAllDataChoice"/>
+                        </OptionChoice>
+                        <OptionItem option="subsetNobs"/>
+                    </Group>
+                </Group> -->
+            </Container>
+
+
+        </UI>
+
+    <Dependencies>
+
+     <!--  	<Dependency condition="($ActivateBuild == '1')">
+           <Target action="hide" conditionResult="false" option="optionsTab"/>
+            <Target action="show" conditionResult="true" option="optionsTab"/>
+           <Target action="disable" conditionResult="false" option="rolesGroup"/>
+            <Target action="enable" conditionResult="true" option="rolesGroup"/> 
+        </Dependency> -->
+  <!--      <Dependency condition="$usePrefix &amp;&amp; $usePrefix == '1' || !$usePrefix">
+            <Target action="show" conditionResult="true" option="prefix"/>
+            <Target action="hide" conditionResult="false" option="prefix"/>
+        </Dependency>
+        <Dependency condition="$useIdVar &amp;&amp; $useIdVar == '1' || !$useIdVar">
+            <Target action="show" conditionResult="true" option="idVariable"/>
+            <Target action="hide" conditionResult="false" option="idVariable"/>
+            <Target action="show" conditionResult="true" option="allowDuplicates"/>
+            <Target action="hide" conditionResult="false" option="allowDuplicates"/>
+        </Dependency>
+        <Dependency condition="$useIdLabelVar &amp;&amp; $useIdLabelVar == '1' || !$useIdLabelVar">
+            <Target action="show" conditionResult="true" option="idLabelVariable"/>
+            <Target action="hide" conditionResult="false" option="idLabelVariable"/>
+        </Dependency>
+        <Dependency condition="$useNameVarname &amp;&amp; $useNameVarname == '1' || !$useNameVarname">
+            <Target action="show" conditionResult="true" option="nameVarname"/>
+            <Target action="hide" conditionResult="false" option="nameVarname"/>
+        </Dependency>
+        <Dependency condition="$useLabelVarname &amp;&amp; $useLabelVarname == '1' || !$useLabelVarname">
+            <Target action="show" conditionResult="true" option="labelVarname"/>
+            <Target action="hide" conditionResult="false" option="labelVarname"/>
+        </Dependency>
+        <Dependency condition="($showData == '1')">
+            <Target action="show" conditionResult="true" option="showDataCombo"/>
+            <Target action="hide" conditionResult="false" option="showDataCombo"/>
+        </Dependency>
+        <Dependency condition="($showData == '1' &amp;&amp; $showDataCombo == 'showSubsetDataChoice')">
+            <Target action="show" conditionResult="true" option="subsetNobs"/>
+            <Target action="hide" conditionResult="false" option="subsetNobs"/>
+        </Dependency> -->
+    </Dependencies>
+
+    <Requirements>
+     <!--   <Requirement condition="!(             $useNameVarname == '1' &amp;&amp;             $useLabelVarname == '1' &amp;&amp;             $nameVarname.equalsIgnoreCase( $labelVarname ) )">
+            <Message>The names for the SAS variables to hold the original variable names and labels cannot be the same.</Message>
+        </Requirement>
+        <Requirement condition="!(             $useNameVarname == '1' &amp;&amp;             $dataset.columnExists($nameVarname)             )">
+            <Message>The specified name of the SAS variable to hold the original variable names is already in use in the data set.</Message>
+        </Requirement>
+        <Requirement condition="!(             $useLabelVarname == '1' &amp;&amp;             $dataset.columnExists($labelVarname)             )">
+            <Message>The specified name of the SAS variable to hold the original variable labels is already in use in the data set.</Message>
+        </Requirement> -->
+    </Requirements>
+
+    <CodeTemplate>
+        <![CDATA[
+/*OPTIONS MERROR SYMBOLGEN MLOGIC MPRINT SOURCE SOURCE2;*/
+##libname AUTO2020 '/home/sasdemo/CodeTable/Auto2020Funcs';
+##libname DATA2020 '/home/sasdemo/CodeTable/Data';
+%LET MySource_Table=$startds;
+%LET CP_COUNT=0;
+%LET PACKAGES_TO_INCLUDE='';
+%LET WORKING_ON_MODEL='';
+OPTIONS VALIDVARNAME=ANY;
+
+%LET WORKING_ON_MODEL=#foreach($item in $packageupdate)$item#end;
+
+
+%LET PACKAGES_TO_INCLUDE=#foreach( $item in $packageupdate ) '$item'#end
+#if ( $packagestoleverage.size() > 0 ), #foreach( $item in $packagestoleverage )'$item'#if( $foreach.hasNext ) ,#end#end#end;
+
+/* BELOW WILL BUILD TABLE OF VARIABLES COMPRISED OF THE SOURCE DATA AND VARIABLES FROM OTHER MODELS SELECTED TO BE USED AS POTENTIAL VARIABLE INPUTS */
+/*%BUILD_VAR_DROP_DOWNS*/
+%BUILD_VAR_DROP_DOWNS_USING_PGM
+/* BELOW IS A MACRO TO BUILD THE DROP DOWNS FOR INPUT MODEL SOURCES THAT WILL ONLY CONTAIN THE MODELS SELECTED ON THIS PAGE*/
+%SELECTED_PACKAGE_DROP_DOWN
+
+
+        ]]>
+    </CodeTemplate>
+<TemplateValues version="5.1">
+<![CDATA[
+{"startds":{"librarytable":"SASHELP.DEMOGRAPHICS"},"packageds":{"librarytable":"WORK.PACKAGES"},"packageupdate":"json:[{\"value\":\"DEM\",\"type\":\"Char\",\"length\":5,\"format\":\"\",\"informat\":\"\",\"className\":\"RoleObject\"}]","packagestoleverage":"json:[{\"value\":\"APP\",\"type\":\"Char\",\"length\":5,\"format\":\"\",\"informat\":\"\",\"className\":\"RoleObject\"},{\"value\":\"PRC\",\"type\":\"Char\",\"length\":5,\"format\":\"\",\"informat\":\"\",\"className\":\"RoleObject\"}]"}
+]]>
+</TemplateValues>
+
+</Task>

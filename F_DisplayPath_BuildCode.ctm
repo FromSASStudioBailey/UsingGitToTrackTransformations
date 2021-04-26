@@ -1,0 +1,450 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task schemaVersion="7.2">
+
+    <Registration>
+        <Name>Display Path Build Code</Name>
+        <Description>The Transpose Data task transposes selected columns of an input table into the rows of an output table.</Description>
+        <GUID>A2B05210-A6AF-4E48-8A80-B72901252345</GUID>
+        <Procedures>TRANSPOSE</Procedures>
+        <Version>5.2</Version>
+        <Links>
+            <Link href="http://documentation.sas.com/?softwareId=STUDIOBASIC&amp;softwareVersion=5.2&amp;softwareContextId=tasks&amp;requestor=inapp">SAS Studio Task Reference Guide</Link>
+            <Link href=""> </Link>
+            <Link href=""> </Link>
+			 <Link href="http://documentation.sas.com/?softwareId=MVADOC&amp;softwareVersion=5.2_9.4&amp;softwareContextId=proc_transpose&amp;requestor=inapp">The TRANSPOSE Procedure</Link>
+            <Link href=""> </Link>
+            <Link href=""> </Link>
+            <Link href="http://support.sas.com/training/studio">SAS Tutorials</Link>
+        </Links>
+    </Registration>
+
+    <Metadata>
+        <DataSources>
+			 <DataSource name="startds" where="true">
+                <Roles>
+                    <Role  maxVars="1" minVars="1" name="startdummyvar" order="true" type="C">Package to update:</Role>
+                </Roles>
+            </DataSource>
+            <DataSource name="dataset" defaultvalue="WORK.SOURCE_VARIABLES" where="true">
+                <Roles>
+                    <Role exclude="idVariable,idLabelVariable" maxVars="0" minVars="1" name="transposeVariables" order="true" type="A">Variables used in transformation:</Role>
+                    <Role indent="1" maxVars="0" minVars="0" name="copyVariables" order="true" type="A">Copy to output data set:</Role>
+                    <Role exclude="transposeVariables, byVariables, idLabelVariable" indent="1" maxVars="1" minVars="1" name="idVariable" order="true" type="A">New column names:</Role>
+                    <Role exclude="transposeVariables, byVariables, idVariable" indent="1" maxVars="1" minVars="1" name="idLabelVariable" order="true" type="A">New column labels:</Role>
+                    <Role exclude="idVariable, idLabelVariable" maxVars="0" minVars="0" name="byVariables" order="true" type="A">Group analysis by:</Role>
+                </Roles>
+            </DataSource>
+            <DataSource name="targetds" readOnly="true" defaultValue="WORK.TARGETS" where="false">
+                <Roles>
+                    <Role  maxVars="1" minVars="1" name="selectedTarget" order="true" type="C">Target Used To Create Code:</Role>
+                </Roles>
+            </DataSource>
+        </DataSources>
+
+        <Options>
+            <Option inputType="string" name="dataTab">DATA</Option>
+            <Option inputType="string" name="dataGroup">DATA</Option>
+            <Option inputType="string" name="rolesGroup">ROLES</Option>
+            <Option inputType="string" name="otherRolesGroup">ADDITIONAL ROLES</Option>
+
+            <Option inputType="string" name="optionsTab">OPTIONS</Option>
+
+            <Option defaultValue="0" indent="1" inputType="checkbox" name="allowDuplicates">Allow duplicates of ID values</Option>
+
+            <Option inputType="string" name="transposedVarNamesGroup">NAMES AND LABELS OF TRANSPOSED VARIABLES</Option>
+            <Option inputType="string" name="transposedVarNamesNote">Construct New Variable Names</Option>
+            <Option defaultValue="1" inputType="checkbox" name="usePrefix">Use prefix</Option>
+            <Option defaultValue="Column" indent="1" inputType="validationtext" invalidMessage="Enter a valid SAS variable name" missingMessage="Enter a valid SAS variable name" name="prefix" regExp=".{1,30}" required="true" width="200px">Prefix:</Option>
+            <Option defaultValue="0" inputType="checkbox" name="useIdVar">Select a variable that contains the names of the new variables</Option>
+            <Option inputType="string" name="transposedVarLabelsNote">Construct New Variable Labels</Option>
+            <Option defaultValue="0" inputType="checkbox" name="useIdLabelVar">Select a variable that contains the labels of the new variables</Option>
+
+            <Option inputType="string" name="originalVarNamesGroup">NAMES AND LABELS OF ORIGINAL VARIABLES</Option>
+            <Option defaultValue="0" inputType="checkbox" name="useNameVarname">Put original variable names in a new variable</Option>
+            <Option defaultValue="0" inputType="checkbox" name="useLabelVarname">Put original variable labels in a new variable</Option>
+<!-- New SAS variable name: check against input data set -->
+            <Option defaultValue="_Name_" indent="1" inputType="validationtext" invalidMessage="Enter a valid SAS variable name to hold the original variable names" missingMessage="Enter a valid SAS variable name to hold the original variable names" name="nameVarname" regExp=".{1,32}" required="true" width="200px">Name:</Option>
+<!-- New SAS variable name: check against input data set -->
+            <Option defaultValue="_Label_" indent="1" inputType="validationtext" invalidMessage="Enter a valid SAS variable name to hold the original variable labels" missingMessage="Enter a valid SAS variable name to hold the original variable labels" name="labelVarname" regExp=".{1,32}" required="true" width="203px">Label:</Option>
+
+            <Option inputType="string" name="outputGroup">OUTPUT DATA SET</Option>
+
+            <Option defaultValue="work.Transpose" inputType="outputdata" name="outDsname" required="true" unique="true">Data set name:</Option>
+
+            <Option inputType="string" name="showDataGroup">Output Data</Option>
+            <Option defaultValue="0" inputType="checkbox" name="showData">Print output data</Option>
+            <Option defaultValue="showSubsetDataChoice" inputType="combobox" name="showDataCombo"/>
+            <Option inputType="string" name="showSubsetDataChoice">Specify subset of data to print</Option>
+            <Option inputType="string" name="showAllDataChoice">All</Option>
+            <Option decimalPlaces="0" defaultValue="10" increment="1" indent="1" inputType="numstepper" invalidMessage="Enter an integer greater than 0 for the number of observations to be shown" minValue="1" missingMessage="Enter an integer greater than 0 for the number of observations to be shown" name="subsetNobs" promptMessage="Enter an integer greater than 0 for the number of observations to be shown" rangeMessage="Enter an integer greater than 0 for the number of observations to be shown" required="true" width="100px">Number of observations:</Option>
+
+            <Option inputType="string" name="subsetTitle">Subset of {1}</Option>
+			<Option defaultValue="" inputType="inputtext" missingMessage="Missing an output variable." name="textOUTPUT" promptMessage="Enter variable output name." required="true">Name of transformation output variable:</Option>
+			<Option name="textCode" required="true" inputType="textbox" width="100%" height="300px" splitlines="true"   defaultValue="">Code Window</Option>
+	<!--		<Option defaultValue="1" inputType="radio" name="radioExternalVarNo" variable="radioIncludeVars">Include Variables from other models</Option>
+			<Option inputType="radio" name="radioExternalVarYes" variable="radioIncludeVars">Exclude Variables from other models</Option> -->
+			<Option defaultValue="1" inputType="checkbox" name="chkCreateTargets">Create List of Targets</Option>
+			<Option defaultValue="0" inputType="checkbox" name="chkShowOrphans">Display Orphan Transformations?</Option>
+			<Option inputType="markdown" name="markdownchkTargets">
+**Step 1:** Check the box (Create list of targets) and then 
+click the run button. After running code, uncheck the box 
+</Option>  
+			<Option inputType="markdown" name="markdownselectTarget">
+**Step 2:** Select variable, then click
+run button to generate underlying code. 
+</Option> 
+			<Option inputType="markdown" name="markdownmakespace">  
+# Diagnostic
+&gt;  
+&gt;
+&gt; 
+  
+
+
+</Option>
+			<Option inputType="markdown" name="markdownorphan">  
+The main purpose of this task is to show all variables used to create 
+a specific transformation. Below will do the opposite. It will
+show variables that played no role in creating a specific
+transformation.  
+Orphans: If you would like to view 
+transformations not used in your target. 
+Check the box(Display orphan transformations?)
+and then click the run button 
+</Option> 
+
+        </Options>
+    </Metadata>
+
+        <UI>
+            <Container option="dataTab">
+                <Group open="true" option="dataGroup">
+        <!--            <DataItem data="startds"/>
+					<OptionItem option="chkShowOrphans"/> -->
+					<OptionItem option="markdownchkTargets"/>
+					<OptionItem option="chkCreateTargets"/>
+		<!--		<OptionItem option="radioExternalVarNo"/>
+				<OptionItem option="radioExternalVarYes"/> -->
+                </Group>
+                <Group open="true" option="rolesGroup">
+		<!--			<DataItem data="dataset"/>
+                    <RoleItem role="transposeVariables"/> -->
+  					<DataItem data="targetds"/>
+					<OptionItem option="markdownselectTarget"/>
+					<RoleItem role="selectedTarget"/>
+		<!--			<OptionItem option="markdownmakespace"/>
+					<OptionItem option="markdownmakespace"/> -->
+					<OptionItem option="markdownmakespace"/>
+					<OptionItem option="markdownorphan"/>
+					<OptionItem option="chkShowOrphans"/>
+		<!--			<OptionItem option="textOUTPUT"/>
+					<OptionItem option="textCode"/> -->
+                </Group>
+   <!--             <Group option="otherRolesGroup">
+                    <RoleItem role="byVariables"/>
+                </Group>
+                <Group open="true" option="outputGroup">
+                    <OptionItem option="outDsname"/>
+                    <RoleItem role="copyVariables"/>
+                    <Group open="true" option="showDataGroup">
+                        <OptionItem option="showData"/>
+                        <OptionChoice option="showDataCombo">
+                            <OptionItem option="showSubsetDataChoice"/>
+                            <OptionItem option="showAllDataChoice"/>
+                        </OptionChoice>
+                        <OptionItem option="subsetNobs"/>
+                    </Group>
+                </Group> -->
+            </Container>
+
+     <!--       <Container option="optionsTab">
+
+                <Group open="true" option="transposedVarNamesGroup">
+                    <Group open="true" option="transposedVarNamesNote">
+                    <OptionItem option="usePrefix"/>
+                        <OptionItem option="prefix"/>
+                    <OptionItem option="useIdVar"/>
+                    <RoleItem role="idVariable"/>
+                    <OptionItem option="allowDuplicates"/>
+                </Group>
+                    <Group option="transposedVarLabelsNote">
+                    <OptionItem option="useIdLabelVar"/>
+                    <RoleItem role="idLabelVariable"/>
+                </Group>
+                </Group>
+                <Group option="originalVarNamesGroup">
+                    <OptionItem option="useNameVarname"/>
+                    <OptionItem option="nameVarname"/>
+                    <OptionItem option="useLabelVarname"/>
+                    <OptionItem option="labelVarname"/>
+                </Group>
+
+            </Container> -->
+        </UI>
+
+    <Dependencies>
+
+      	<Dependency condition="($chkCreateTargets == '1')">
+            <Target action="show" conditionResult="false" option="rolesGroup"/>
+            <Target action="hide" conditionResult="true" option="rolesGroup"/>
+        </Dependency> 
+  <!--      <Dependency condition="$usePrefix &amp;&amp; $usePrefix == '1' || !$usePrefix">
+            <Target action="show" conditionResult="true" option="prefix"/>
+            <Target action="hide" conditionResult="false" option="prefix"/>
+        </Dependency>
+        <Dependency condition="$useIdVar &amp;&amp; $useIdVar == '1' || !$useIdVar">
+            <Target action="show" conditionResult="true" option="idVariable"/>
+            <Target action="hide" conditionResult="false" option="idVariable"/>
+            <Target action="show" conditionResult="true" option="allowDuplicates"/>
+            <Target action="hide" conditionResult="false" option="allowDuplicates"/>
+        </Dependency>
+        <Dependency condition="$useIdLabelVar &amp;&amp; $useIdLabelVar == '1' || !$useIdLabelVar">
+            <Target action="show" conditionResult="true" option="idLabelVariable"/>
+            <Target action="hide" conditionResult="false" option="idLabelVariable"/>
+        </Dependency>
+        <Dependency condition="$useNameVarname &amp;&amp; $useNameVarname == '1' || !$useNameVarname">
+            <Target action="show" conditionResult="true" option="nameVarname"/>
+            <Target action="hide" conditionResult="false" option="nameVarname"/>
+        </Dependency>
+        <Dependency condition="$useLabelVarname &amp;&amp; $useLabelVarname == '1' || !$useLabelVarname">
+            <Target action="show" conditionResult="true" option="labelVarname"/>
+            <Target action="hide" conditionResult="false" option="labelVarname"/>
+        </Dependency>
+        <Dependency condition="($showData == '1')">
+            <Target action="show" conditionResult="true" option="showDataCombo"/>
+            <Target action="hide" conditionResult="false" option="showDataCombo"/>
+        </Dependency>
+        <Dependency condition="($showData == '1' &amp;&amp; $showDataCombo == 'showSubsetDataChoice')">
+            <Target action="show" conditionResult="true" option="subsetNobs"/>
+            <Target action="hide" conditionResult="false" option="subsetNobs"/>
+        </Dependency> -->
+    </Dependencies>
+
+    <Requirements>
+     <!--   <Requirement condition="!(             $useNameVarname == '1' &amp;&amp;             $useLabelVarname == '1' &amp;&amp;             $nameVarname.equalsIgnoreCase( $labelVarname ) )">
+            <Message>The names for the SAS variables to hold the original variable names and labels cannot be the same.</Message>
+        </Requirement>
+        <Requirement condition="!(             $useNameVarname == '1' &amp;&amp;             $dataset.columnExists($nameVarname)             )">
+            <Message>The specified name of the SAS variable to hold the original variable names is already in use in the data set.</Message>
+        </Requirement>
+        <Requirement condition="!(             $useLabelVarname == '1' &amp;&amp;             $dataset.columnExists($labelVarname)             )">
+            <Message>The specified name of the SAS variable to hold the original variable labels is already in use in the data set.</Message>
+        </Requirement> -->
+    </Requirements>
+
+    <CodeTemplate>
+        <![CDATA[
+
+OPTIONS VALIDVARNAME=ANY;
+
+#if ($chkCreateTargets == '1')
+
+%LET TARGET_COUNT=0;
+
+/* macro below deleteTargets will delete any macro variables that begin with TARGETVARS. WE DO THIS SO WE DON'T HAVE ANY OLD MACRO VALUES FLOATING AROUND FROM PREVIOUS RUNS */
+%deleteTargets
+
+
+/* below will create a macro list of transformations that have already been created */
+PROC SQL;
+SELECT COUNT(DISTINCT(CallingPackage_Function)) INTO :TARGET_COUNT FROM  WORK.PGM_META_DATA where inputVariable NOT=trim(CALLING_PACKAGE)||".DUMMY" AND TRIM(CALLING_PACKAGE) in (&PACKAGES_TO_INCLUDE.);
+SELECT DISTINCT("'"||TRIM(CallingPackage_Function)||"'n") INTO :TARGETVARS1-:TARGETVARS%TRIM(%LEFT(&TARGET_COUNT.)) FROM  WORK.PGM_META_DATA where inputVariable NOT=trim(CALLING_PACKAGE)||".DUMMY" AND TRIM(CALLING_PACKAGE) in (&PACKAGES_TO_INCLUDE.);
+QUIT;
+
+/* below will take the macro list above and create a work table called targets and set all values to 'DUMMY'. Example: log_credit='DUMMY' */
+/* the reason we do this is we only need the column name of log_credit, we don't want\need it's value so we set equal to 'DUMMY' */
+%MACRO BUILD_TARGETS;
+
+DATA WORK.TARGETS;
+	%DO I=1 %TO &TARGET_COUNT.;
+		%QUOTE(&&TARGETVARS&I.)='DUMMY';;
+	%END;
+RUN;
+
+
+
+%MEND BUILD_TARGETS;
+
+%BUILD_TARGETS
+
+#end
+
+#if (($chkCreateTargets == '0') && ($chkShowOrphans == '1'))
+
+DATA CASUSER.my_links;
+	SET WORK.PGM_META_DATA;
+	where inputVariable NOT=trim(CALLING_PACKAGE)||".DUMMY" AND TRIM(CALLING_PACKAGE) in (&PACKAGES_TO_INCLUDE.);
+RUN;
+
+proc optnetwork 
+		/*  direction=undirected  if I use undirectd my orphan of_no_use will be seen*/
+		direction=directed links=casuser.my_links;
+	linksVar to=InPutVariable from=CallingPackage_Function;
+	shortestPath outWeights=casuser.weights source="#foreach($item in $selectedTarget)$item.get("value")#end";
+run;
+
+
+proc optnetwork 
+		/*  direction=undirected  if I use undirectd my orphan of_no_use will be seen*/
+		direction=undirected links=casuser.my_links;
+	linksVar to=InPutVariable from=CallingPackage_Function;
+	shortestPath outWeights=casuser.weights_ud source="#foreach($item in $selectedTarget)$item.get("value")#end";
+run;
+
+proc sql;			
+SELECT sink as Orphan
+FROM casuser.weights_ud where substr(sink,1,3)= substr(source,1,3) 
+EXCEPT ALL
+SELECT sink
+FROM casuser.weights;
+quit;
+
+
+#elseif (($chkCreateTargets == '0') && ($chkShowOrphans == '0'))
+
+DATA CASUSER.my_links;
+SET WORK.PGM_META_DATA;
+RUN;
+
+
+
+proc optnetwork 
+ /*  direction=undirected  if I use undirectd my orphan of_no_use will be seen*/
+   direction=directed
+   links=casuser.my_links;
+   linksVar
+      to=InPutVariable
+      from=CallingPackage_Function;
+   shortestPath
+      outWeights=casuser.weights
+      source="#foreach($item in $selectedTarget)$item.get("value")#end";
+run;
+
+data weights; set casuser.weights; run;
+
+proc sql;
+   select max(path_weight) into :max_path_weight
+   from work.weights;
+quit;
+
+data weights;
+  set weights;
+  order = (&max_path_weight+1) - path_weight;
+run;
+
+proc sort data=weights; by order; run;
+
+proc sql;
+	create table work.BuildThese as select distinct A.source, A.sink, 
+		A.path_weight, A.order, trim(scan(A.sink, 1, '.')) as Git_Repos, 
+		trim(scan(A.sink, 2, '.')) as Git_Program, trim(scan(A.source, 1, '.')) as 
+		Source_Folder, trim(scan(A.source, 2, '.')) as VariableToBuild from 
+		work.weights as A join WORK.PGM_META_DATA as B on 
+		A.sink=B.CallingPackage_Function order by path_weight desc, order;
+	select COUNT(DISTINCT(SINK)) INTO :func_cnt from work.BuildThese;
+quit;
+
+%if %eval(&func_cnt.)=0 %then
+  %do;
+    %put NOTE: No lower levels exist;
+  %end;
+%else
+  %do;
+
+Data work.buildthese2;
+	set work.buildthese;
+	length OneFile LastFile $190.;
+
+	/* OneFile=trim(cats("&GITLOCATION.",Git_Repos,"/",Git_Program,".sas")); */
+	OneFile='"'||"&GITLOCATION."||'Git_'||strip(Git_Repos)||'/'||strip(Git_Program)||'.sas'||'"';
+    LastFile='"'||"&GITLOCATION."||'Git_'||strip(Source_Folder)||'/'||strip(VariableToBuild)||'.sas'||'"';
+
+	/* BuildFile=cats("&GITLOCATION.","Git_",Source_Folder,"/Temp_Concat_For_",VariableToBuild,".txt"); */
+	BuildFile=cats("&GITLOCATION.", "TEMP_CODE/", "TEMP_CONCAT_FOR_", 
+		VariableToBuild, ".txt");
+	PythonConcatPgm=cats("&GITLOCATION.", "AGGREGATE_CODE/", "PY_CONCAT_FOR_", 
+		VariableToBuild, ".txt");
+	No_Library_File=cats("&GITLOCATION.", "AGGREGATE_CODE/", "PY_CONCAT_FOR_", 
+		VariableToBuild, "_No_Library.txt");
+
+
+	/* PythonConcatPgm=cats("&GITLOCATION.","Git_",Source_Folder,"/Py_Concat_For_",VariableToBuild,".txt"); */
+run;
+
+Proc sql;
+	select distinct(trim(BuildFile)) into :MySASCode from work.buildthese2;
+	select distinct(cats('"',BuildFile,'"')) into :MySASCodeQT from work.buildthese2;
+	select distinct(cats('"', PythonConcatPgm, '"')) into :FinalSASCode from 
+		work.buildthese2;
+	select distinct(cats('"', No_Library_File, '"')) into :Code_W_O_Library from 
+		work.buildthese2;
+quit;
+
+
+/* The data null step below will delete the sas code file if it already exists */
+data _null_;
+	fname="myText";
+	rc=filename(fname, "&MySASCode.");
+
+	if rc=0 and fexist(fname) then
+		rc=fdelete(fname);
+	rc=filename(fname);
+run;
+
+filename myText "&MySASCode.";
+
+data _null_;
+	set work.buildthese2 end=last;
+	file myText DELIMITER=' ' LRECL=256 pad;
+
+	if _n_=1 then
+		do;
+			put @1 'def MyConcatFunc():';
+			put @5 '"Output: MyKey"';
+			put @5 'import shutil';
+			put @5 'import re';
+			put @5 'output =open("'&FinalSASCode.'","wb")';
+			put @5 'shutil.copyfileobj(open(' OneFile +(-1)',"rb"),output)';
+		end;
+	else if _n_ > 1 then
+		do;
+			put @5 'shutil.copyfileobj(open(' OneFile +(-1)',"rb"),output)';
+		end;
+
+	if last then
+		do;
+			put @5 'shutil.copyfileobj(open(' LastFile +(-1)',"rb"),output)';
+			put @5 "output.close()";
+			put @5 'fin = open("'&FinalSASCode.'","rt")';
+			put @5 'fout = open("'&Code_W_O_Library.'","wt")';
+			put @5 'for line in fin:';
+    		put @9 'fout.write(re.sub(r"\w{3}\.","",line))';
+			put @5 'fin.close()';
+			put @5 'fout.close()';
+	end;
+run;
+
+proc fcmp;
+declare object py(python);
+rc = py.infile(&MySASCodeQT.);
+put rc=;
+rc = py.publish();
+rc = py.call("MyConcatFunc");
+Result = py.results["MyKey"];
+put Result=;
+call py.clear();
+run;
+  %end;
+#else
+
+#end
+
+
+
+#*
+
+
+*#
+        ]]>
+    </CodeTemplate>
+</Task>
